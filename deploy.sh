@@ -22,11 +22,34 @@ if ! command -v docker &> /dev/null; then
 fi
 docker --version
 
-# 3. Install Docker Compose
-echo "[3/8] Installing Docker Compose..."
-if ! command -v docker-compose &> /dev/null; then
-    apt-get install -y docker-compose-plugin
-fi
+# 3. Install & detect Docker Compose (v1 or v2)
+echo "[3/8] Detecting Docker Compose..."
+detect_compose() {
+    if docker compose version >/dev/null 2>&1; then
+        DC="docker compose"
+        echo "  Using Docker Compose v2 (plugin)"
+        return 0
+    fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        DC="docker-compose"
+        echo "  Using Docker Compose v1 (standalone)"
+        return 0
+    fi
+    echo "  Not found. Installing v2 plugin..."
+    apt-get install -y -qq docker-compose-plugin 2>/dev/null || true
+    if docker compose version >/dev/null 2>&1; then
+        DC="docker compose"; echo "  Installed v2 plugin"; return 0
+    fi
+    echo "  Downloading standalone binary..."
+    curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+        -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    if command -v docker-compose >/dev/null 2>&1; then
+        DC="docker-compose"; echo "  Installed standalone binary"; return 0
+    fi
+    echo "  ERROR: Could not install Docker Compose"; exit 1
+}
+detect_compose
 
 # 4. Install Git
 echo "[4/8] Installing Git..."
@@ -102,7 +125,7 @@ NEXT_PUBLIC_WS_URL=wss://api.kaliptosal.dev
 EOF
 
 echo "[7/8] Building and starting services..."
-docker compose up --build -d
+$DC up --build -d
 
 # 7. Wait for services to be healthy
 echo "Waiting for services to start..."
@@ -208,6 +231,7 @@ echo "  API:      https://api.kaliptosal.dev"
 echo "  Swagger:  https://api.kaliptosal.dev/docs"
 echo "  Admin:    admin / @zy_sal90"
 echo ""
-echo "  Docker:   docker compose logs -f"
-echo "  Status:   docker compose ps"
+echo "  Logs:     $DC logs -f"
+echo "  Status:   $DC ps"
+echo "  Redeploy: bash redeploy.sh"
 echo "=========================================="

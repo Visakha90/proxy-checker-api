@@ -1,4 +1,10 @@
-version: "3.9"
+# Compatible with Docker Compose v1 (docker-compose) AND v2 (docker compose).
+# Notes on compatibility:
+#  - "version" key retained for v1; harmless (deprecation warning) on v2.
+#  - depends_on uses the SHORT list form. The long form with
+#    "condition: service_healthy" is v2-only and breaks v1, so instead the
+#    backend waits for Postgres/Redis itself via a wait loop in its command.
+version: "3.8"
 
 services:
   db:
@@ -13,10 +19,10 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -29,7 +35,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   backend:
     build:
@@ -41,15 +47,24 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - db
+      - redis
     volumes:
       - ./backend:/app
+    # Wait for Postgres to accept connections before running migrations.
+    # This replaces the v2-only "condition: service_healthy" so the stack
+    # works identically on Compose v1.
     command: >
-      sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+      sh -c "
+      echo 'Waiting for PostgreSQL...';
+      until python -c \"import socket,sys; s=socket.socket(); s.settimeout(2); sys.exit(0 if s.connect_ex(('db',5432))==0 else 1)\"; do
+        sleep 2;
+      done;
+      echo 'PostgreSQL is up. Running migrations...';
+      alembic upgrade head &&
+      echo 'Migrations complete. Starting server...' &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
 
   frontend:
     build:
