@@ -17,11 +17,13 @@ from app.api.monitoring import router as monitoring_router
 from app.api.users import router as users_router
 from app.api.features import router as features_router
 from app.api.admin_v2 import router as admin_v2_router
+from app.api.download import router as download_router
 from app.api.platform import router as platform_router
 from app.api.websocket import router as ws_router, broadcast_stats
 from app.services.scraper import scraper_instance
 from app.services.checker import checker_instance
 from app.services.cleaner import cleaner_instance
+from app.services.proxy_cache import proxy_cache
 
 logging.basicConfig(
     level=logging.INFO,
@@ -72,6 +74,9 @@ async def lifespan(app: FastAPI):
 
     broadcast_task = asyncio.create_task(broadcast_stats())
 
+    # Start proxy cache auto-refresh (every 5 min)
+    cache_task = asyncio.create_task(proxy_cache.start_auto_refresh(300))
+
     checker_task = None
     cleanup_task = None
 
@@ -99,6 +104,8 @@ async def lifespan(app: FastAPI):
     scraper_instance.stop()
     scraper_task.cancel()
     broadcast_task.cancel()
+    cache_task.cancel()
+    proxy_cache.stop()
     if checker_task:
         checker_instance.stop()
         checker_task.cancel()
@@ -137,6 +144,7 @@ app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(features_router, prefix="/api/v1", tags=["Features"])
 app.include_router(platform_router, prefix="/api/v1", tags=["Platform"])
 app.include_router(admin_v2_router, prefix="/api/admin/v2", tags=["Admin V2"])
+app.include_router(download_router, prefix="/api/v1", tags=["Download"])
 app.include_router(monitoring_router, tags=["Monitoring"])
 app.include_router(ws_router, tags=["WebSocket"])
 
