@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Globe, Download, Zap, Code2, Users,
-  Settings, Search, Menu, X, LogOut, User, ChevronDown, Shield,
+  Settings, Search, Menu, X, User,
 } from "lucide-react";
 
 const navItems = [
@@ -18,22 +18,21 @@ const navItems = [
   { href: "/download", label: "Download", icon: Download },
   { href: "/tester", label: "Tester", icon: Zap },
   { href: "/api-docs", label: "API", icon: Code2 },
-  { href: "/users", label: "Users", icon: Users, adminOnly: true },
-  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
+  { href: "/users", label: "Users", icon: Users },
+  { href: "/admin", label: "Admin", icon: Settings },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { connected } = useWebSocket();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setCmdOpen(v => !v); }
-      if (e.key === "Escape") { setCmdOpen(false); setProfileOpen(false); }
+      if (e.key === "Escape") { setCmdOpen(false); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -63,7 +62,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          {navItems.filter(item => !item.adminOnly || (user?.role === "admin" || user?.role === "manager")).map(item => {
+          {navItems.map(item => {
             const active = pathname === item.href;
             const Icon = item.icon;
             return (
@@ -86,31 +85,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className={cn("w-2 h-2 rounded-full", connected ? "bg-success animate-pulse-slow" : "bg-destructive")} />
             <span className="text-2xs text-muted-foreground">{connected ? "Systems Operational" : "Reconnecting..."}</span>
           </div>
-          {isAuthenticated && (
-            <div className="relative">
-              <button onClick={() => setProfileOpen(v => !v)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-accent transition-colors">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-xs font-medium truncate">{user?.username || "Admin"}</p>
-                  <p className="text-2xs text-muted-foreground">{user?.plan || "Free"} plan</p>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-              <AnimatePresence>
-                {profileOpen && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute bottom-full left-0 right-0 mb-1 p-1 rounded-xl bg-card border border-border shadow-xl">
-                    <button onClick={() => { logout(); setProfileOpen(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-destructive hover:bg-destructive/10 transition-colors">
-                      <LogOut className="w-3.5 h-3.5" /> Sign Out
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-secondary/50">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+              <User className="w-3.5 h-3.5 text-white" />
             </div>
-          )}
+            <div className="flex-1 text-left">
+              <p className="text-xs font-medium truncate">Team Admin</p>
+              <p className="text-2xs text-muted-foreground">Private access</p>
+            </div>
+          </div>
         </div>
       </aside>
 
