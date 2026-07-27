@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel, Field
 
-from app.api.users import get_current_user
+from app.core.security import get_team_user as get_current_user
 from app.models.user_models import User
 from app.services.geolocation import geo_service, speed_service, reputation_service
 from app.services.rotation import rotation_service, chain_service, uptime_service

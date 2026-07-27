@@ -7,8 +7,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, Depends, Query
 from pydantic import BaseModel, Field
 
-from app.api.users import get_current_user
-from app.core.security import get_current_admin
+from app.core.security import get_team_user as get_current_user, get_current_admin
 from app.models.user_models import User
 from app.services.gateway import gateway, fingerprint_service, load_balancer
 from app.services.platform import (

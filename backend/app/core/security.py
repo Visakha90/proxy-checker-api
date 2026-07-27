@@ -127,3 +127,22 @@ async def require_admin(user: dict = Depends(get_current_user)) -> dict:
 
 # Legacy alias for backward compatibility
 get_current_admin = require_admin
+
+
+# ─── Private Team Mode ────────────────────────────────────────────────────────
+# Since this is an internal platform with no login, provide a mock user
+# for endpoints that still reference user objects (chains, webhooks, etc.)
+
+class _TeamUser:
+    """Mock user for private team platform."""
+    id = 1
+    username = "admin"
+    email = "admin@kaliptosal.dev"
+    role = "admin"
+    plan = "enterprise"
+    is_active = True
+
+
+async def get_team_user() -> _TeamUser:
+    """Always returns the team admin user. No auth check."""
+    return _TeamUser()
