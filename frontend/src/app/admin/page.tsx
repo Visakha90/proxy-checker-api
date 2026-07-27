@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AppLayout, PageHeader } from "@/components/layout";
 import { Card, StatCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import { CardSkeleton } from "@/components/ui/skeleton";
 import { fetchJson, type ProxySource } from "@/lib/api";
 
 export default function AdminPage() {
-  const router = useRouter();
   const [auth, setAuth] = useState(false);
   const [dash, setDash] = useState<any>(null);
   const [sources, setSources] = useState<ProxySource[]>([]);
@@ -22,9 +20,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) { router.push("/login"); return; }
     setAuth(true); load();
-  }, [router]);
+  }, []);
 
   const load = async () => {
     try {
@@ -36,7 +33,7 @@ export default function AdminPage() {
       ]);
       setDash(d); setSources(s); setSettings(st); setLogs(l);
     } catch (e: any) {
-      if (e.message?.includes("401")) { localStorage.removeItem("token"); router.push("/login"); }
+      console.error(e);
     } finally { setLoading(false); }
   };
 
@@ -61,9 +58,7 @@ export default function AdminPage() {
 
   return (
     <AppLayout>
-      <PageHeader title="Admin Panel" description="Manage proxy infrastructure"
-        actions={<Button variant="destructive" size="sm" onClick={() => { localStorage.removeItem("token"); router.push("/login"); }}>Logout</Button>}
-      />
+      <PageHeader title="Admin Panel" description="Manage proxy infrastructure" />
 
       {dash && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
