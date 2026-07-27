@@ -124,42 +124,79 @@ class ProxyChecker:
         return valid_results
 
     async def update_proxies(self, results: list[dict]):
-        """Update proxy records with check results."""
-        async with async_session() as session:
-            now = datetime.now(timezone.utc)
-            for result in results:
-                values = {
-                    "is_alive": result["is_alive"],
-                    "latency": result["latency"],
-                    "status_code": result["status_code"],
-                    "anonymity_level": result["anonymity_level"],
-                    "ssl_support": result["ssl_support"],
-                    "last_checked": now,
-                    "check_count": Proxy.check_count + 1,
-                }
+        """
+        Update proxy records with check results.
+        
+        Deadlock prevention:
+        - Sort results by proxy ID (deterministic lock order)
+        - Process in small batches of 100 with separate transactions
+        - Auto-retry on deadlock
+        """
+        if not results:
+            return
 
-                if result["is_alive"]:
-                    values["fail_count"] = 0
-                    values["last_seen"] = now
-                else:
-                    values["fail_count"] = Proxy.fail_count + 1
+        # SORT by proxy ID for deterministic lock ordering
+        sorted_results = sorted(results, key=lambda r: r["id"])
+        now = datetime.now(timezone.utc)
 
-                await session.execute(
-                    update(Proxy).where(Proxy.id == result["id"]).values(**values)
-                )
+        batch_size = 100
+        for i in range(0, len(sorted_results), batch_size):
+            batch = sorted_results[i:i + batch_size]
 
-                # Record check history
-                history = CheckHistory(
-                    proxy_id=result["id"],
-                    is_alive=result["is_alive"],
-                    latency=result["latency"],
-                    status_code=result["status_code"],
-                    error=result["error"],
-                    checked_at=now,
-                )
-                session.add(history)
+            async def do_batch(b=batch, t=now):
+                async with async_session() as session:
+                    for result in b:
+                        values = {
+                            "is_alive": result["is_alive"],
+                            "latency": result["latency"],
+                            "status_code": result["status_code"],
+                            "anonymity_level": result["anonymity_level"],
+                            "ssl_support": result["ssl_support"],
+                            "last_checked": t,
+                            "check_count": Proxy.check_count + 1,
+                        }
 
-            await session.commit()
+                        if result["is_alive"]:
+                            values["fail_count"] = 0
+                            values["last_seen"] = t
+                        else:
+                            values["fail_count"] = Proxy.fail_count + 1
+
+                        await session.execute(
+                            update(Proxy).where(Proxy.id == result["id"]).values(**values)
+                        )
+
+                        history = CheckHistory(
+                            proxy_id=result["id"],
+                            is_alive=result["is_alive"],
+                            latency=result["latency"],
+                            status_code=result["status_code"],
+                            error=result["error"],
+                            checked_at=t,
+                        )
+                        session.add(history)
+
+                    await session.commit()
+
+            try:
+                await self._execute_with_retry(do_batch, f"checker update batch {i//batch_size}")
+            except Exception as e:
+                logger.error(f"Checker batch {i//batch_size} failed: {e}")
+
+    async def _execute_with_retry(self, coro_factory, description: str):
+        """Execute with automatic deadlock retry (exponential backoff)."""
+        for attempt in range(1, 6):
+            try:
+                return await coro_factory()
+            except Exception as e:
+                error_str = str(e)
+                is_deadlock = "DeadlockDetectedError" in error_str or "deadlock detected" in error_str.lower()
+                if is_deadlock and attempt < 5:
+                    delay = 0.1 * (2 ** (attempt - 1))
+                    logger.warning(f"Deadlock on {description} (attempt {attempt}/5), retry in {delay:.2f}s")
+                    await asyncio.sleep(delay)
+                    continue
+                raise
 
     async def update_statistics(self):
         """Calculate and store current statistics."""
