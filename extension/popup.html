@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 320px; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: #0a0a0a; color: #fafafa; padding: 16px; }
+    .header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .logo { width: 24px; height: 24px; background: linear-gradient(135deg, #10b981, #06b6d4); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .title { font-size: 13px; font-weight: 600; }
+    .status { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 12px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot.on { background: #10b981; box-shadow: 0 0 4px #10b981; }
+    .dot.off { background: #ef4444; }
+    .status-text { font-size: 11px; color: #9ca3af; }
+    .proxy-info { font-size: 12px; font-family: monospace; color: #d1d5db; margin-top: 4px; }
+    .btn { width: 100%; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+    .btn-primary { background: #10b981; color: #000; }
+    .btn-primary:hover { background: #34d399; }
+    .btn-secondary { background: rgba(255,255,255,0.05); color: #d1d5db; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+    .select { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: #fafafa; font-size: 11px; margin-bottom: 8px; }
+    .select option { background: #111; }
+    .footer { margin-top: 12px; text-align: center; font-size: 10px; color: #6b7280; }
+    .footer a { color: #10b981; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="title">ProxyChecker</span>
+  </div>
+
+  <div class="status">
+    <div class="dot" id="statusDot"></div>
+    <div>
+      <div class="status-text" id="statusText">Disconnected</div>
+      <div class="proxy-info" id="proxyInfo">No proxy active</div>
+    </div>
+  </div>
+
+  <select class="select" id="typeSelect">
+    <option value="">Any Type</option>
+    <option value="http">HTTP</option>
+    <option value="socks4">SOCKS4</option>
+    <option value="socks5">SOCKS5</option>
+  </select>
+
+  <select class="select" id="speedSelect">
+    <option value="">Any Speed</option>
+    <option value="fast">Fast (&lt;500ms)</option>
+    <option value="medium">Medium (500-2000ms)</option>
+  </select>
+
+  <button class="btn btn-primary" id="getProxy">Get Random Proxy</button>
+  <button class="btn btn-secondary" id="rotateProxy">Rotate Proxy</button>
+  <button class="btn btn-danger" id="clearProxy">Disconnect Proxy</button>
+
+  <div class="footer">
+    <a href="http://localhost:3000/dashboard" target="_blank">Open Dashboard</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

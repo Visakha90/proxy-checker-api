@@ -1,0 +1,59 @@
+name: Fetch Proxies
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6 hours
+  workflow_dispatch:
+    inputs:
+      proxy_type:
+        description: "Proxy type (http, socks4, socks5, all)"
+        required: false
+        default: "http"
+      limit:
+        description: "Max proxies to fetch"
+        required: false
+        default: "500"
+
+env:
+  PROXYCHECKER_API_URL: ${{ secrets.PROXYCHECKER_API_URL || 'http://localhost:8000/api/v1' }}
+  PROXYCHECKER_API_KEY: ${{ secrets.PROXYCHECKER_API_KEY }}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch HTTP proxies
+        run: |
+          curl -s -H "X-API-Key: $PROXYCHECKER_API_KEY" \
+            "$PROXYCHECKER_API_URL/download/${{ github.event.inputs.proxy_type || 'http' }}?format=txt" \
+            -o proxies_http.txt
+          echo "Fetched $(wc -l < proxies_http.txt) HTTP proxies"
+
+      - name: Fetch SOCKS5 proxies
+        run: |
+          curl -s -H "X-API-Key: $PROXYCHECKER_API_KEY" \
+            "$PROXYCHECKER_API_URL/download/socks5?format=txt" \
+            -o proxies_socks5.txt
+          echo "Fetched $(wc -l < proxies_socks5.txt) SOCKS5 proxies"
+
+      - name: Upload proxy lists
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxy-lists-${{ github.run_number }}
+          path: |
+            proxies_http.txt
+            proxies_socks5.txt
+          retention-days: 7
+
+      - name: Commit to repo (optional)
+        if: github.event_name == 'schedule'
+        run: |
+          git config user.name "ProxyChecker Bot"
+          git config user.email "bot@proxychecker.io"
+          mkdir -p lists
+          mv proxies_*.txt lists/
+          git add lists/
+          git diff --staged --quiet || git commit -m "Update proxy lists [$(date -u +%Y-%m-%d)]"
+          git push
