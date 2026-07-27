@@ -45,18 +45,32 @@ fi
 
 # 6. Create .env file
 echo "[6/8] Creating .env..."
-cat > .env << 'EOF'
+
+# Generate a URL-SAFE database password (alphanumeric only).
+# This avoids percent-encoding pitfalls in DATABASE_URL entirely.
+if [ -f .env ] && grep -q '^POSTGRES_PASSWORD=' .env; then
+    DB_PASS=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
+    echo "  Reusing existing database password"
+else
+    DB_PASS=$(openssl rand -hex 24)
+    echo "  Generated new URL-safe database password"
+fi
+SECRET_KEY=$(openssl rand -hex 32)
+
+cat > .env << EOF
 # Database
+# NOTE: POSTGRES_PASSWORD is intentionally alphanumeric (hex) so that it is
+# URL-safe and requires no percent-encoding inside DATABASE_URL.
 POSTGRES_USER=proxydb
-POSTGRES_PASSWORD=ProxyDB_Secure_2024!
+POSTGRES_PASSWORD=${DB_PASS}
 POSTGRES_DB=proxy_checker
-DATABASE_URL=postgresql+asyncpg://proxydb:ProxyDB_Secure_2024!@db:5432/proxy_checker
+DATABASE_URL=postgresql+asyncpg://proxydb:${DB_PASS}@db:5432/proxy_checker
 
 # Redis
 REDIS_URL=redis://redis:6379/0
 
 # Backend
-SECRET_KEY=$(openssl rand -hex 32)
+SECRET_KEY=${SECRET_KEY}
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=@zy_sal90
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
@@ -86,10 +100,6 @@ STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_API_URL=https://api.kaliptosal.dev
 NEXT_PUBLIC_WS_URL=wss://api.kaliptosal.dev
 EOF
-
-# Generate a real secret key
-SECRET_KEY=$(openssl rand -hex 32)
-sed -i "s/SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env
 
 echo "[7/8] Building and starting services..."
 docker compose up --build -d

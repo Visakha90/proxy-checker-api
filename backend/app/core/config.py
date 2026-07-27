@@ -3,8 +3,10 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    # Database
-    database_url: str = "postgresql+asyncpg://proxydb:proxydb_secret_2024@db:5432/proxy_checker"
+    # Database — MUST be provided via DATABASE_URL env var in production.
+    # Passwords containing special characters (@ : / ? # [ ] %) must be
+    # percent-encoded in the URL, e.g. "@" -> "%40".
+    database_url: str = "postgresql+asyncpg://proxydb:changeme@db:5432/proxy_checker"
 
     # Redis
     redis_url: str = "redis://redis:6379/0"
