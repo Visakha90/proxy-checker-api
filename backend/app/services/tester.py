@@ -66,16 +66,17 @@ class ProxyTester:
         method: str = "GET",
         timeout: int = 10,
         proxy_type: str | None = None,
-        limit: int = 100,
+        limit: int = 0,
     ) -> list[dict]:
-        """Test live proxies against a target URL."""
+        """Test live proxies against a target URL. limit=0 means ALL."""
         async with async_session() as session:
             query = select(Proxy.ip, Proxy.port, Proxy.proxy_type).where(
                 Proxy.is_alive == True
             )
             if proxy_type:
                 query = query.where(Proxy.proxy_type == proxy_type)
-            query = query.limit(limit)
+            if limit > 0:
+                query = query.limit(limit)
 
             result = await session.execute(query)
             proxies = [

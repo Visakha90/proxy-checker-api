@@ -16,31 +16,53 @@ PROXY_PATTERN = re.compile(
 )
 
 DEFAULT_SOURCES = [
-    {
-        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
-        "name": "TheSpeedX HTTP",
-        "proxy_type": "http",
-    },
-    {
-        "url": "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt",
-        "name": "ShiftyTR HTTP",
-        "proxy_type": "http",
-    },
-    {
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
-        "name": "Monosans HTTP",
-        "proxy_type": "http",
-    },
-    {
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
-        "name": "Monosans SOCKS4",
-        "proxy_type": "socks4",
-    },
-    {
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
-        "name": "Monosans SOCKS5",
-        "proxy_type": "socks5",
-    },
+    # ─── Original Sources ─────────────────────────────────────────────
+    {"url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt", "name": "TheSpeedX HTTP", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt", "name": "ShiftyTR HTTP", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", "name": "Monosans HTTP", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt", "name": "Monosans SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt", "name": "Monosans SOCKS5", "proxy_type": "socks5"},
+    # ─── ProxyScrape v4 ───────────────────────────────────────────────
+    {"url": "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&protocol=http&limit=5000&format=text&timeout=5000", "name": "ProxyScrape HTTP", "proxy_type": "http"},
+    {"url": "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&protocol=socks4&limit=5000&format=text&timeout=5000", "name": "ProxyScrape SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&protocol=socks5&limit=5000&format=text&timeout=5000", "name": "ProxyScrape SOCKS5", "proxy_type": "socks5"},
+    # ─── ProxyScrape CDN ──────────────────────────────────────────────
+    {"url": "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/http/data.txt", "name": "ProxyScrape CDN HTTP", "proxy_type": "http"},
+    {"url": "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/socks4/data.txt", "name": "ProxyScrape CDN SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/socks5/data.txt", "name": "ProxyScrape CDN SOCKS5", "proxy_type": "socks5"},
+    # ─── Proxifly CDN ─────────────────────────────────────────────────
+    {"url": "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/http/data.txt", "name": "Proxifly HTTP", "proxy_type": "http"},
+    {"url": "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/socks4/data.txt", "name": "Proxifly SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/socks5/data.txt", "name": "Proxifly SOCKS5", "proxy_type": "socks5"},
+    # ─── iplocate ─────────────────────────────────────────────────────
+    {"url": "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/http.txt", "name": "iplocate HTTP", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/https.txt", "name": "iplocate HTTPS", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/socks4.txt", "name": "iplocate SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/socks5.txt", "name": "iplocate SOCKS5", "proxy_type": "socks5"},
+    # ─── OpenProxyList ────────────────────────────────────────────────
+    {"url": "https://api.openproxylist.xyz/http.txt", "name": "OpenProxyList HTTP", "proxy_type": "http"},
+    {"url": "https://api.openproxylist.xyz/socks4.txt", "name": "OpenProxyList SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://api.openproxylist.xyz/socks5.txt", "name": "OpenProxyList SOCKS5", "proxy_type": "socks5"},
+    # ─── Vakhov Fresh Proxy ───────────────────────────────────────────
+    {"url": "https://vakhov.github.io/fresh-proxy-list/http.txt", "name": "Vakhov HTTP", "proxy_type": "http"},
+    {"url": "https://vakhov.github.io/fresh-proxy-list/https.txt", "name": "Vakhov HTTPS", "proxy_type": "http"},
+    {"url": "https://vakhov.github.io/fresh-proxy-list/socks4.txt", "name": "Vakhov SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://vakhov.github.io/fresh-proxy-list/socks5.txt", "name": "Vakhov SOCKS5", "proxy_type": "socks5"},
+    # ─── Stormsia ─────────────────────────────────────────────────────
+    {"url": "https://stormsia.github.io/proxy-list/http.txt", "name": "Stormsia HTTP", "proxy_type": "http"},
+    {"url": "https://stormsia.github.io/proxy-list/socks5.txt", "name": "Stormsia SOCKS5", "proxy_type": "socks5"},
+    {"url": "https://stormsia.github.io/proxy-list/socks4.txt", "name": "Stormsia SOCKS4", "proxy_type": "socks4"},
+    # ─── clarketm ─────────────────────────────────────────────────────
+    {"url": "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt", "name": "clarketm Raw", "proxy_type": "http"},
+    # ─── Proxy-List.Download ──────────────────────────────────────────
+    {"url": "https://www.proxy-list.download/api/v1/get?type=http", "name": "ProxyListDownload HTTP", "proxy_type": "http"},
+    {"url": "https://www.proxy-list.download/api/v1/get?type=https", "name": "ProxyListDownload HTTPS", "proxy_type": "http"},
+    {"url": "https://www.proxy-list.download/api/v1/get?type=socks4", "name": "ProxyListDownload SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://www.proxy-list.download/api/v1/get?type=socks5", "name": "ProxyListDownload SOCKS5", "proxy_type": "socks5"},
+    # ─── HProxy Mirror ────────────────────────────────────────────────
+    {"url": "https://raw.githubusercontent.com/hproxy-com/free-proxy-list/main/proxies/http/data.txt", "name": "HProxy HTTP", "proxy_type": "http"},
+    {"url": "https://raw.githubusercontent.com/hproxy-com/free-proxy-list/main/proxies/socks4/data.txt", "name": "HProxy SOCKS4", "proxy_type": "socks4"},
+    {"url": "https://raw.githubusercontent.com/hproxy-com/free-proxy-list/main/proxies/socks5/data.txt", "name": "HProxy SOCKS5", "proxy_type": "socks5"},
 ]
 
 

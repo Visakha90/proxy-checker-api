@@ -29,7 +29,7 @@ export default function TesterPage() {
   const [timeout, setTimeout] = useState("10");
   const [method, setMethod] = useState("GET");
   const [type, setType] = useState("");
-  const [limit, setLimit] = useState("100");
+  const [limit, setLimit] = useState("0");
   const [testing, setTesting] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [error, setError] = useState("");
@@ -82,7 +82,7 @@ export default function TesterPage() {
           </div>
           <Select label="Method" value={method} onChange={(e) => setMethod(e.target.value)} options={[{ value: "GET", label: "GET" }, { value: "POST", label: "POST" }]} />
           <Input label="Timeout (s)" type="number" value={timeout} onChange={(e) => setTimeout(e.target.value)} />
-          <Input label="Limit" type="number" value={limit} onChange={(e) => setLimit(e.target.value)} />
+          <Input label="Limit (0=All)" type="number" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="0 = test all" />
         </div>
         <div className="flex items-center gap-3">
           <Select value={type} onChange={(e) => setType(e.target.value)} options={[{ value: "", label: "All Types" }, { value: "http", label: "HTTP" }, { value: "https", label: "HTTPS" }, { value: "socks4", label: "SOCKS4" }, { value: "socks5", label: "SOCKS5" }]} />

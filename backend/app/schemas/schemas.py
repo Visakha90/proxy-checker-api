@@ -72,7 +72,7 @@ class ProxyTestRequest(BaseModel):
     timeout: int = Field(default=10, ge=1, le=60)
     method: str = Field(default="GET", pattern="^(GET|POST)$")
     proxy_type: str | None = Field(default=None, pattern="^(http|https|socks4|socks5)$")
-    limit: int = Field(default=100, ge=1, le=10000)
+    limit: int = Field(default=0, ge=0, le=50000)  # 0 = test ALL
 
 
 class ProxyTestResult(BaseModel):
