@@ -8,8 +8,8 @@ import { useWebSocket } from "@/lib/hooks";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Globe, Download, Zap, Code2, CreditCard,
-  Settings, Search, Menu, X, LogOut, User, ChevronDown,
+  LayoutDashboard, Globe, Download, Zap, Code2, Users,
+  Settings, Search, Menu, X, LogOut, User, ChevronDown, Shield,
 } from "lucide-react";
 
 const navItems = [
@@ -18,8 +18,8 @@ const navItems = [
   { href: "/download", label: "Download", icon: Download },
   { href: "/tester", label: "Tester", icon: Zap },
   { href: "/api-docs", label: "API", icon: Code2 },
-  { href: "/pricing", label: "Pricing", icon: CreditCard },
-  { href: "/admin", label: "Admin", icon: Settings },
+  { href: "/users", label: "Users", icon: Users, adminOnly: true },
+  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -63,7 +63,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          {navItems.map(item => {
+          {navItems.filter(item => !item.adminOnly || (user?.role === "admin" || user?.role === "manager")).map(item => {
             const active = pathname === item.href;
             const Icon = item.icon;
             return (

@@ -1,20 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
+import { Globe } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
   const { login: authLogin } = useAuth();
-  const [loginInput, setLoginInput] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,67 +23,45 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Try user login first
-      let res = await fetch(`${API_URL}/api/users/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login: loginInput, password }),
+        body: JSON.stringify({ username, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        authLogin(data.access_token, data.user);
-        router.push(redirect);
-        return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || "Authentication failed");
       }
 
-      // Fallback: admin login
-      res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: loginInput, password }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        authLogin(data.access_token);
-        router.push(redirect.startsWith("/admin") ? redirect : "/admin");
-        return;
-      }
-
-      const errData = await res.json().catch(() => ({}));
-      setError(errData.detail || "Invalid username/email or password");
-    } catch {
-      setError("Connection failed. Is the backend running?");
+      const data = await res.json();
+      authLogin(data.access_token, data.user);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Connection failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="relative w-full max-w-sm animate-slide-up">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 via-cyan-400 to-indigo-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </div>
-          </Link>
-          <h1 className="text-lg font-semibold">Welcome back</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in with your username, email, or admin account</p>
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/25">
+            <Globe className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight">ProxyChecker</h1>
+          <p className="text-sm text-muted-foreground mt-1">Internal Operations Platform</p>
         </div>
 
-        <div className="rounded-2xl surface-1 p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
-              label="Username or Email"
-              value={loginInput}
-              onChange={(e) => setLoginInput(e.target.value)}
-              placeholder="admin or you@email.com"
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               autoComplete="username"
               required
             />
@@ -94,13 +70,13 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Enter your password"
               autoComplete="current-password"
               required
             />
             {error && (
-              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/15">
-                <p className="text-[11px] text-red-400">{error}</p>
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <p className="text-xs text-destructive">{error}</p>
               </div>
             )}
             <Button type="submit" loading={loading} className="w-full">
@@ -109,12 +85,10 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <div className="flex items-center justify-between mt-5 text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">← Home</Link>
-          <Link href={`/register${redirect !== "/dashboard" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="text-primary hover:underline">
-            Create account
-          </Link>
-        </div>
+        <p className="text-center text-2xs text-muted-foreground mt-6">
+          Access restricted to authorized team members only.
+          <br />Contact your admin if you need an account.
+        </p>
       </div>
     </div>
   );

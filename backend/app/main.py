@@ -10,11 +10,9 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import get_settings
 from app.api.routes import router as api_router
 from app.api.admin import router as admin_router
-from app.api.auth import router as auth_router
 from app.api.dns import router as dns_router
 from app.api.v1 import router as v1_router
 from app.api.monitoring import router as monitoring_router
-from app.api.users import router as users_router
 from app.api.features import router as features_router
 from app.api.admin_v2 import router as admin_v2_router
 from app.api.platform import router as platform_router
@@ -114,10 +112,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ProxyChecker API",
-    description="Professional proxy scraper and checker API",
-    version="1.0.0",
+    title="ProxyChecker — Internal Platform",
+    description="Internal team proxy operations dashboard. All endpoints require JWT authentication.",
+    version="2.0.0",
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url=None,
 )
 
 # Rate limiting
@@ -127,22 +127,29 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://kaliptosal.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routes
+# Routes — Internal Team Platform (all require authentication)
+# Auth is the only unauthenticated endpoint (login)
+from app.api.internal_auth import router as internal_auth_router
+app.include_router(internal_auth_router, prefix="/api/auth", tags=["Auth"])
+
+# Core proxy operations (require at least viewer role)
 app.include_router(api_router, prefix="/api", tags=["Proxies"])
-app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
-app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(dns_router, prefix="/api/dns", tags=["DNS"])
-app.include_router(v1_router, prefix="/api/v1", tags=["Public API v1"])
-app.include_router(users_router, prefix="/api/users", tags=["Users"])
+app.include_router(v1_router, prefix="/api/v1", tags=["API v1"])
 app.include_router(features_router, prefix="/api/v1", tags=["Features"])
-app.include_router(platform_router, prefix="/api/v1", tags=["Platform"])
+
+# Admin operations
+app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(admin_v2_router, prefix="/api/admin/v2", tags=["Admin V2"])
+app.include_router(dns_router, prefix="/api/dns", tags=["DNS"])
+app.include_router(platform_router, prefix="/api/v1", tags=["Platform"])
+
+# Monitoring (health is public for load balancers, rest require auth)
 app.include_router(monitoring_router, tags=["Monitoring"])
 app.include_router(ws_router, tags=["WebSocket"])
 
