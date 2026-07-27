@@ -472,6 +472,28 @@ async def get_sources_info(request: Request, response: Response):
 # ─── Download Endpoints ───────────────────────────────────────────────────────
 
 
+@router.get("/download/stats", summary="Download page stats", tags=["Download"])
+async def download_page_stats():
+    """Get cache health, proxy counts, and download statistics."""
+    from app.services.proxy_cache import proxy_cache
+    from app.core.redis import redis_client as _redis
+    from datetime import datetime as _dt, timezone as _tz
+
+    meta = await proxy_cache.get_cache_meta()
+    today = _dt.now(_tz.utc).strftime("%Y-%m-%d")
+    return {
+        "success": True,
+        "cache": meta,
+        "downloads": {
+            "today_total": int(await _redis.get(f"downloads:total:{today}") or 0),
+            "today_http": int(await _redis.get(f"downloads:http:{today}") or 0),
+            "today_socks4": int(await _redis.get(f"downloads:socks4:{today}") or 0),
+            "today_socks5": int(await _redis.get(f"downloads:socks5:{today}") or 0),
+        },
+        "quality_note": "Only the top-ranked live proxies are served.",
+    }
+
+
 @router.get("/download/{file_type}", summary="Download proxies", tags=["Download"])
 async def download_proxies(
     file_type: str,
