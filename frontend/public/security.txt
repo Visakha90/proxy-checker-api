@@ -1,0 +1,3 @@
+Contact: mailto:yeychanthy168169@gmail.com
+Preferred-Languages: en
+Canonical: https://kaliptosal.dev/.well-known/security.txt

@@ -31,3 +31,8 @@ Thumbs.db
 # Docker volumes
 pgdata/
 redisdata/
+
+# SSL certificates (generated on server)
+certbot/conf/
+nginx/ssl/*.pem
+nginx/ssl/*.key
